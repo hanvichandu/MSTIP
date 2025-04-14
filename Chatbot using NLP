@@ -1,0 +1,32 @@
+import pandas as pd
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+nltk.download('stopwords')
+nltk.download('punkt')
+df = pd.read_csv('electronics_faq_dataset.csv')
+stop_words = set(stopwords.words('english'))
+def preprocess_text(text):
+    words = word_tokenize(text)
+    words = [word.lower() for word in words if word.isalnum() and word.lower() not in stop_words]
+    preprocessed_text = ' '.join(words)
+    return preprocessed_text
+def find_best_match(user_input):
+    user_input = preprocess_text(user_input)
+    best_match_score = 0
+    best_answer = "Sorry, I couldn't find an answer to your question. Can you please specify or ask in a different way?"
+    for _, row in df.iterrows():
+        keywords = preprocess_text(row['Keyword'])
+        keyword_list = keywords.split()
+        match_score = len(set(user_input.split()) & set(keyword_list))
+        if match_score > best_match_score:
+            best_match_score = match_score
+            best_answer = f"FAQ: {row['FAQ']}\nAnswer: {row['Answer']}"
+    return best_answer
+while True:
+    user_question = input("Hello! How can I help you? Please type your question or type 'quit' to exit: ")
+    if user_question.lower() == 'quit':
+        print("Thank you for chatting with us. Have a great day!")
+        break 
+    response = find_best_match(user_question)
+    print(response)
